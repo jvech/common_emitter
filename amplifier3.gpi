@@ -2,19 +2,22 @@ set terminal pngcairo enhanced size 1080,920 lw 1.5
 set output 'plots/amplifier3.png'
 
 I = {0,1}
-r1 = 40e3
-r2 = 10e3
+r1 = 90.5e3
+r2 = 5e3
 ci = 10e-6
 co = 10e-6
-rc = 3.5e3
-re = 1e3
+rc = 10e3
+re = 500
 rl = 10e3
-beta = 180
-r_e = 52
+beta = 170
+r_e = 12.5
 
+vcc = 42
+
+vce(x) =  vcc - ((rc + re) * beta + re) * x
 
 zth(x) = r1 * r2 / (r1 * r2 * ci * x + r1 + r2)
-f(x) = - beta * \
+H(x) = - beta * \
 rc * rl * co * x / ((rl + rc) * co * x + 1) * \
 ci * zth(x) * x / (zth(x) + (beta + 1) * (re + r_e))
 
@@ -25,7 +28,7 @@ set multiplot layout 2,2 title 'Common emitter amplifier DC filtering'
 
 set grid lt 0
 set format x "%.0s"
-set xrange [0:0.035]
+set xrange [0:0.005]
 #set yrange [-5:5]
 set xlabel 'time (ms)'
 set xzeroaxis lt -1
@@ -39,19 +42,22 @@ plot 'results/voltages.txt' u 1:2 with lines title 'v_{in}', \
 
 
 set title 'Transistor regions'
-set xlabel 'base \& collector currents (A)'
+set xlabel 'i_b'
 set ylabel 'V_{CE} (V)'
 unset format y
 set key default
-set logscale x
+set format "%.0s%c"
+unset logscale x
 set grid lt -1
 unset xrange
-unset yrange
-plot 'results/transistor.txt' u 3:2 title 'i_b',\
-     'results/transistor.txt' u 4:2 title 'i_c'
+#set yrange [0:vcc]
+#set xrange [2e-6:15e-6]
+plot 'results/transistor.txt' u 3:2 lc 2 title 'simulation',\
+     'results/transistor.txt' u 3:(vce($3)) w lines lc 1 title 'v_{CE} (i_b)'
 
 
 set title 'AC Magnitude Response'
+unset yrange
 set key bottom right
 unset format y
 set format x '%.0s %c'
@@ -62,7 +68,7 @@ set ylabel '20 log_{10}|H_{(j w)}|'
 set xlabel 'Frequency (Hz)'
 set grid lt -1
 plot 'results/voltages_ac.txt' u 1:2 w lines lc 2 title 'Simulation', \
-     'results/voltages_ac.txt' u 1:(db(f(2 * pi * $1 * I))) w lines dt '--' lc 1 title 'Formula'
+     db(H(2 * pi * x * I)) w lines dt '--' lc 1 title 'Formula'
 
 
 set title 'AC Phase Response'
@@ -73,4 +79,4 @@ set ylabel 'tan^{-1} H_{(j w)}'
 set logscale x
 set angle degrees
 plot 'results/voltages_ac.txt' u 1:3 w lines title 'simulation' lc 2, \
-     'results/voltages_ac.txt' u 1:(arg(f(I * 2 * pi * $1))) w lines lc 1 dt '--' title 'formula'
+     arg(H(I * 2 * pi * x)) w lines lc 1 dt '--' title 'formula'

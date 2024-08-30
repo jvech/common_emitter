@@ -8,7 +8,7 @@ Rb x bb 20k
 Q1 cc bb gnd Q2N2222A
 Rc cc vc 400
 Vcc vc gnd DC 10
-Co cc out 470u
+Co cc out 100u
 Rl out gnd 1k
 
 .probe i(Rl)
